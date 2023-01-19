@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
-import { LoginForm } from "../molecules/small/styled";
+import { LoginForm } from "../molecules/atoms/styled";
 import { useNavigate } from "react-router-dom";
 import TopBar from "../molecules/TopBar";
 import Dropdown from "../molecules/Dropdown";
-import { loginCheck } from "../../api";
+import { loginCheck, kakaoLogin } from "../../api";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { loginState } from "../../store/atoms";
+import Kakao from "kakao-js-sdk";
 
 interface IForm {
   id: string;
@@ -17,32 +20,33 @@ function Login() {
     register,
     handleSubmit,
     formState: { errors },
-    setError,
   } = useForm<IForm>();
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState<Boolean>(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const toggle = () => setIsOpen(!isOpen);
+  const [isLoggedIn, setIsLoggedIn] = useRecoilState(loginState);
 
   function onSubmit(data: IForm) {
-    //  axios.post 해서 isLoggedIn false 받았다고 가정
-    // 일단 localStorage 로 해놓음.
-    // 추후 api 에서 LoginCheck api 따오기.
-
-    console.log("로그인 성공");
-    // loginCheck(data.id, data.password);
-    // localStorage.setItem("isLoggedIn", JSON.stringify(true));
-    navigate("/");
+    const checkLogin = async () => {
+      const loginStatus = await loginCheck(data.id, data.password);
+      console.log("loginStatus : ", loginStatus);
+      setIsLoggedIn(loginStatus);
+      console.log("navigate()");
+      navigate("/");
+    };
+    checkLogin();
+    // console.log("로그인페이지");
+    // console.log("isLoggedIn : ", isLoggedIn);
+    // setIsLoggedIn(true);
+    // navigate("/");
   }
 
   return (
     <>
       <TopBar
-        isLoggedIn={isLoggedIn}
-        setIsLoggedIn={setIsLoggedIn}
-        toggle={toggle}
+        id={undefined}
+        mainService={"로그인"}
+        needWrite={false}
+        needSearch={false}
       />
-      {isOpen && <Dropdown isLoggedIn={isLoggedIn} />}
       <LoginForm onSubmit={handleSubmit(onSubmit)}>
         <label>아이디</label>
         <input
@@ -69,8 +73,19 @@ function Login() {
         <div className="signUpBox">
           <Link to="/register">아이디 찾기</Link>
           <Link to="/register">비밀번호 찾기</Link>
-          <Link to="/register">회원가입</Link>
+          <Link to="/register1">회원가입</Link>
         </div>
+
+        <img
+          onClick={kakaoLogin}
+          style={{
+            height: "auto",
+            width: "100%",
+            cursor: "pointer",
+            margin: "0 auto",
+          }}
+          src="https://asp.pointpark.com/PlusPointMember/resources/images/mobileHomePage/btn_kakao.png"
+        />
       </LoginForm>
     </>
   );

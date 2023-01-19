@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { DropdownBox, Menu } from "./small/styled";
-import { IconRarr, IconLock, IconPower } from "./small/icons";
-
+import { DropdownBox, Menu } from "./atoms/styled";
+import { IconRarr, IconLock, IconPower } from "./atoms/icons";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { loginState, user } from "../../store/atoms";
 const options = ["기능1", "기능2", "기능3"];
-
-interface IDropdownProps {
-  isLoggedIn: Boolean;
-}
-
-function Dropdown({ isLoggedIn }: IDropdownProps) {
+function Dropdown() {
+  const [isLoggedIn, setIsLoggedIn] = useRecoilState(loginState);
+  const userName = useRecoilValue(user);
+  console.log(userName);
   if (!isLoggedIn) {
     return (
       <DropdownBox>
@@ -34,7 +33,7 @@ function Dropdown({ isLoggedIn }: IDropdownProps) {
   return (
     <DropdownBox>
       <h1 className="title">
-        <span>USER NAME님, 환영합니다</span>
+        <span>{userName}님 환영합니다</span>
       </h1>
       <ul>
         {options.map((option, index) => (

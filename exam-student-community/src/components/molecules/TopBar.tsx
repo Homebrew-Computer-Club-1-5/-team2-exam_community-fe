@@ -1,55 +1,57 @@
-import { Bar, Search } from "./small/styled";
-import { IconBar, IconSearch } from "./small/icons";
+import {
+  TopBarBtns,
+  TopContainer,
+  TopBarMenu,
+  TopBarMain,
+  TopBarContainer,
+} from "./atoms/styled";
+import { IconBar } from "./atoms/icons";
 import { Link } from "react-router-dom";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { loginState, user } from "../../store/atoms";
+import { useState, useEffect } from "react";
+import Dropdown from "./Dropdown";
+import SearchBar from "./SearchBar";
 
 interface ITopBarProps {
-  isLoggedIn: Boolean;
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<Boolean>>;
-
-  toggle: VoidFunction;
+  mainService: string | undefined;
+  needWrite: boolean;
+  needSearch: boolean;
+  id: number | undefined;
 }
 
-function TopBar({ isLoggedIn, setIsLoggedIn, toggle }: ITopBarProps) {
-  const onClickLogOut = () => {
-    const isLoggedInPromise = new Promise((resolve, reject) => {
-      resolve(isLoggedIn);
-    });
-
-    isLoggedInPromise
-      .then((value) => !value)
-      .then((value) => {
-        setIsLoggedIn(value);
-        localStorage.setItem("isLoggedIn", JSON.stringify(value));
-        return value;
-      })
-      .then((value) => console.log(value));
-  };
+function TopBar({ mainService, needWrite, needSearch, id }: ITopBarProps) {
+  const [isLoggedIn, setIsLoggedIn] = useRecoilState(loginState);
+  const [isOpen, setIsOpen] = useState(false);
+  const toggle = () => setIsOpen((current) => !current);
+  const onClickLogOut = () => setIsLoggedIn(false);
   return (
-    <Bar>
-      <div className="top">
-        <span onClick={toggle}>
+    <TopBarContainer>
+      <TopContainer>
+        <TopBarMenu onClick={toggle}>
           <IconBar />
-        </span>
-        <span className="logo">
-          <Link to="/">서비스명</Link>
-        </span>
+        </TopBarMenu>
+        <TopBarMain>
+          <Link to="/">{mainService}</Link>
+        </TopBarMain>
         {isLoggedIn ? (
-          <span onClick={onClickLogOut}>
+          <TopBarBtns onClick={onClickLogOut}>
+            {needWrite ? (
+              <Link to="/posts/write" state={{ id }}>
+                글쓰기
+              </Link>
+            ) : null}
             <Link to="/">로그아웃</Link>
-          </span>
+          </TopBarBtns>
         ) : (
-          <span>
+          <TopBarBtns>
             <Link to="/login">로그인</Link>
-          </span>
+          </TopBarBtns>
         )}
-      </div>
-      <Search>
-        <input placeholder="검색어를 입력하세요" />
-        <button>
-          <IconSearch />
-        </button>
-      </Search>
-    </Bar>
+      </TopContainer>
+      {needSearch ? <SearchBar placeholder={"검색하시오."} /> : null}
+      {isOpen ? <Dropdown /> : null}
+    </TopBarContainer>
   );
 }
 

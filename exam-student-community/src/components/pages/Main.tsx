@@ -1,62 +1,49 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import Dropdown from "../molecules/Dropdown";
 import TopBar from "../molecules/TopBar";
 import Boards from "../molecules/Boards";
-import { authCheck, SERVER_URL } from "../../api";
-import axios from "axios";
+import Loading from "../molecules/Loading";
+import { authCheck, getBoards, SERVER_URL } from "../../api";
+import { useRecoilState } from "recoil";
+import { loginState, user } from "../../store/atoms";
+import { useState, useEffect } from "react";
+import { sampleBoards } from "../molecules/atoms/sampleData";
+import { Link } from "react-router-dom";
+import SearchBar from "../molecules/SearchBar";
 
 function Main() {
-  const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState<Boolean>(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const toggle = () => setIsOpen(!isOpen);
+  const [isLoggedIn, setIsLoggedIn] = useRecoilState(loginState);
+  const [userName, setUserName] = useRecoilState(user);
+  const [isLoading, setIsLoading] = useState(true);
+  const [boardsData, setBoardsData] = useState();
 
-  const onClickApi = () => {
-    console.log("api 실행");
-
-    axios({
-      method: "post",
-      url: `${SERVER_URL}/test`,
-      data: {
-        test: 1,
-        data: "data",
-      },
-    }).then((res) => {
-      console.log("res : ", res);
-      console.log("res.data : ", res.data);
-    });
-  };
-
-  //  유저 확인 코드.
-  // 일단 localStorage 로 야매로 구현
-  // 추후 authCheck api 가져와서 하기.
-  // api 동작하는지 확인 필요.
   useEffect(() => {
-    console.log("useEffect 실행");
-    console.log("location :", location.state);
-    if (location.state) {
-      setIsLoggedIn(location.state.isLoggedIn);
-    } else {
-      const isTrueSet = localStorage.getItem("isLoggedIn") === "true";
-      setIsLoggedIn(isTrueSet);
-    }
-    // -----------------------------------------
-    // 진짜 코드
-    // setIsLoggedIn(authCheck);
+    const checkUserAuth = async () => {
+      const authData = await authCheck();
+      const authStatus = authData["isAuthenticated"];
+      const authName = authData["username"];
+      setIsLoggedIn(authStatus);
+      setUserName(authName);
+      setIsLoading(false);
+    };
+    const paintBoards = async () => {
+      const boardsData = await getBoards();
+      setBoardsData(boardsData);
+    };
+    checkUserAuth();
+    paintBoards();
   }, []);
 
-  return (
-    <>
-      <button onClick={onClickApi}>API 실행</button>
+  return true ? (
+    <div style={{ position: "relative" }}>
       <TopBar
-        isLoggedIn={isLoggedIn}
-        setIsLoggedIn={setIsLoggedIn}
-        toggle={toggle}
+        id={undefined}
+        mainService={"서비스명"}
+        needWrite={true}
+        needSearch={true}
       />
-      {isOpen && <Dropdown isLoggedIn={isLoggedIn} />}
-      <Boards />
-    </>
+      <Boards data={boardsData} />
+    </div>
+  ) : (
+    <Loading />
   );
 }
 
