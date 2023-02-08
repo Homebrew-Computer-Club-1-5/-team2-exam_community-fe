@@ -92,7 +92,7 @@ const Register = () => {
     }
     axios({
       method: "post",
-      url: `${SERVER_URL}/id_compare`,
+      url: `${SERVER_URL}/apis/users/compareId`,
       data: {
         user_id: userId,
       },
